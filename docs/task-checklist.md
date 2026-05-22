@@ -6,15 +6,15 @@
 - 每阶段结束后先做一次自测，再进入下一阶段
 
 ## 阶段 0：项目初始化
-- [ ] 创建基础目录结构（`src/`, `data/`, `tests/`, `docs/`）
-- [ ] 创建基础文件（`app.py`, `requirements.txt`, `.env.example`, `README.md`）
-- [ ] 在 `requirements.txt` 写入最小依赖（streamlit, python-dotenv, openai 等）
-- [ ] 在 `.env.example` 提供环境变量模板（如 `OPENAI_API_KEY=`）
-- [ ] 在 `app.py` 渲染一个基础页面标题和占位内容
-- [ ] 本地启动验证：应用可正常打开且无报错
+- [x] 创建基础目录结构（`src/`, `data/`, `tests/`, `docs/`）
+- [x] 创建基础文件（`app.py`, `requirements.txt`, `.env.example`, `README.md`）
+- [x] 在 `requirements.txt` 写入最小依赖（streamlit, python-dotenv, openai 等）
+- [x] 在 `.env.example` 提供环境变量模板（如 `OPENAI_API_KEY=`）
+- [x] 在 `app.py` 渲染一个基础页面标题和占位内容
+- [x] 本地启动验证：应用可正常打开且无报错
 
 验收点：
-- [ ] 项目可运行，页面可访问
+- [x] 项目可运行，页面可访问
 
 ## 阶段 1：倒计时模块（核心）
 
