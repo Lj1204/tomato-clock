@@ -4,6 +4,7 @@ import time
 
 import streamlit as st
 
+from src.stats.service import record_completed_session
 from src.timer import engine
 from src.timer.formatter import format_mmss
 from src.timer.session import ensure_timer_state
@@ -12,7 +13,20 @@ from src.timer.session import ensure_timer_state
 def render_timer_panel() -> None:
     # Ensure timer state keys exist before any render/action logic.
     ensure_timer_state(st.session_state)
+
+    prev_status = st.session_state.timer_status
+    prev_remaining = st.session_state.remaining_sec
+
     engine.tick(st.session_state)
+
+    # Record exactly once when a running timer reaches zero in this rerun.
+    if (
+        prev_status == "running"
+        and st.session_state.timer_status == "idle"
+        and prev_remaining > 0
+        and st.session_state.remaining_sec == 0
+    ):
+        record_completed_session(st.session_state.duration_sec)
 
     st.subheader("Pomodoro Timer")
     st.markdown(f"## {format_mmss(st.session_state.remaining_sec)}")
