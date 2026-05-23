@@ -15,10 +15,17 @@ STATE_KEYS = (
 
 def ensure_timer_state(session_state: Any) -> None:
     """Initialize timer-related keys exactly once per user session."""
+    default = create_default_state()
     if all(key in session_state for key in STATE_KEYS):
+        # Force-sync when configured default duration changes.
+        # This makes code-level duration edits take effect on next app start.
+        if session_state.duration_sec != default.duration_sec:
+            session_state.duration_sec = default.duration_sec
+            session_state.remaining_sec = default.remaining_sec
+            session_state.timer_status = default.timer_status
+            session_state.last_tick_ts = default.last_tick_ts
         return
 
-    default = create_default_state()
     session_state.duration_sec = default.duration_sec
     session_state.remaining_sec = default.remaining_sec
     session_state.timer_status = default.timer_status

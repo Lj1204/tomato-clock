@@ -5,7 +5,7 @@ from typing import Literal
 
 # Timer status is intentionally small and explicit, so UI branching is simple.
 TimerStatus = Literal["idle", "running", "paused"]
-DEFAULT_DURATION_SEC = 25 * 60
+DEFAULT_DURATION_SEC = 1 * 60
 
 
 @dataclass
