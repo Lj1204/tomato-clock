@@ -5,6 +5,8 @@ import time
 import streamlit as st
 
 from src.stats.service import record_completed_session
+from src.tasks.service import add_pomodoro_to_task
+from src.ui.tasks_panel import set_task_feedback
 from src.timer import engine
 from src.timer.formatter import format_mmss
 from src.timer.session import ensure_timer_state
@@ -27,6 +29,11 @@ def render_timer_panel() -> None:
         and st.session_state.remaining_sec == 0
     ):
         record_completed_session(st.session_state.duration_sec)
+        current_task_id = str(st.session_state.get("current_task_id", "")).strip()
+        if current_task_id:
+            # Link one completed pomodoro to the selected task exactly once.
+            add_pomodoro_to_task(current_task_id, st.session_state.duration_sec)
+            set_task_feedback("已为当前任务累计 1 个番茄投入。")
 
     st.subheader("Pomodoro Timer")
     st.markdown(f"## {format_mmss(st.session_state.remaining_sec)}")
