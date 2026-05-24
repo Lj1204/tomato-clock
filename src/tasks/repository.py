@@ -62,10 +62,16 @@ def load_tasks() -> list[dict]:
 
 
 def save_tasks(items: list[dict]) -> None:
-    _write_all(items)
+    try:
+        _write_all(items)
+    except OSError as exc:
+        raise RuntimeError(f"写入任务数据失败: {exc}") from exc
 
 
 def append_task(task: TaskRecord) -> None:
-    items = _read_all()
-    items.append(task.to_dict())
-    _write_all(items)
+    try:
+        items = _read_all()
+        items.append(task.to_dict())
+        _write_all(items)
+    except OSError as exc:
+        raise RuntimeError(f"追加任务失败: {exc}") from exc

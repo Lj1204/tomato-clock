@@ -29,14 +29,20 @@ def _read_all() -> list[dict]:
 
 
 def append_session(record: SessionRecord) -> None:
-    data = _read_all()
-    data.append(record.to_dict())
-    SESSIONS_FILE.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    try:
+        data = _read_all()
+        data.append(record.to_dict())
+        SESSIONS_FILE.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        raise RuntimeError(f"写入专注记录失败: {exc}") from exc
 
 
 def load_sessions_by_date(date_str: str) -> list[dict]:
-    data = _read_all()
-    return [item for item in data if item.get("date") == date_str]
+    try:
+        data = _read_all()
+        return [item for item in data if item.get("date") == date_str]
+    except OSError as exc:
+        raise RuntimeError(f"读取专注记录失败: {exc}") from exc

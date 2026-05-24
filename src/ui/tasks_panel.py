@@ -67,7 +67,7 @@ def _render_current_task_selector(tasks: list[dict]) -> None:
     )
     st.session_state[CURRENT_TASK_ID_KEY] = selected
     if not selected:
-        st.caption("提示：未选择任务时，番茄计时仍可进行，但不会写入任务投入。")
+        st.info("未选择任务时，番茄计时仍可进行，但不会写入任务投入。")
 
 
 def _render_task_group(title: str, items: list[dict]) -> None:
@@ -83,11 +83,12 @@ def _render_task_group(title: str, items: list[dict]) -> None:
             st.write(_task_label(task))
         with col2:
             toggle_label = "恢复任务" if str(task.get("status", "todo")) == "done" else "完成任务"
-            if st.button(toggle_label, key=f"toggle_{task_id}"):
+            if st.button(toggle_label, key=f"toggle_{task_id}", use_container_width=True):
                 toggle_task_status(task_id)
+                st.success("任务状态已更新。")
                 st.rerun()
         with col3:
-            if st.button("删除", key=f"delete_prepare_{task_id}"):
+            if st.button("删除", key=f"delete_prepare_{task_id}", use_container_width=True):
                 st.session_state[DELETE_CONFIRM_TASK_ID_KEY] = task_id
                 st.rerun()
 
@@ -111,6 +112,7 @@ def _render_delete_confirm(tasks: list[dict]) -> None:
                 st.session_state[CURRENT_TASK_SELECT_KEY] = ""
             delete_task(confirm_id)
             st.session_state[DELETE_CONFIRM_TASK_ID_KEY] = ""
+            st.success("任务已删除。")
             st.rerun()
     with col2:
         if st.button("取消", key=f"delete_cancel_{confirm_id}", use_container_width=True):
@@ -120,10 +122,12 @@ def _render_delete_confirm(tasks: list[dict]) -> None:
 
 def render_tasks_panel() -> None:
     ensure_task_state()
-    tasks = get_tasks()
 
-    st.subheader("专注任务")
-    st.caption("任务完成与番茄完成是两件事：番茄归零只累计投入，不会自动完成任务。")
+    st.markdown('<div class="panel-title">专注任务</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="panel-note">任务完成与番茄完成是两件事：番茄归零只累计投入，不会自动完成任务。</div>',
+        unsafe_allow_html=True,
+    )
 
     if st.session_state[TASK_FEEDBACK_KEY]:
         st.success(st.session_state[TASK_FEEDBACK_KEY])
@@ -136,7 +140,15 @@ def render_tasks_panel() -> None:
             st.rerun()
         st.warning("任务标题不能为空。")
 
-    st.caption(f"任务总数：{len(tasks)}")
+    try:
+        tasks = get_tasks()
+    except RuntimeError as exc:
+        st.error(str(exc))
+        return
+
+    todo_count = len([task for task in tasks if str(task.get("status", "todo")) == "todo"])
+    done_count = len(tasks) - todo_count
+    st.caption(f"任务总数：{len(tasks)} | 待办：{todo_count} | 已完成：{done_count}")
     _render_current_task_selector(tasks)
 
     if not tasks:

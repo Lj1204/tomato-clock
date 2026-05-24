@@ -12,6 +12,29 @@ from src.timer.formatter import format_mmss
 from src.timer.session import ensure_timer_state
 
 
+def _status_label(status: str) -> str:
+    return {
+        "idle": "待开始",
+        "running": "专注中",
+        "paused": "已暂停",
+    }.get(status, status)
+
+
+def _status_tone(status: str) -> str:
+    return {
+        "idle": "#7f6662",
+        "running": "#2f8f4e",
+        "paused": "#c07f2a",
+    }.get(status, "#7f6662")
+
+
+def _progress_rate(remaining_sec: int, duration_sec: int) -> float:
+    if duration_sec <= 0:
+        return 0.0
+    done = max(0, duration_sec - remaining_sec)
+    return min(1.0, done / duration_sec)
+
+
 def render_timer_panel() -> None:
     # Ensure timer state keys exist before any render/action logic.
     ensure_timer_state(st.session_state)
@@ -28,16 +51,58 @@ def render_timer_panel() -> None:
         and prev_remaining > 0
         and st.session_state.remaining_sec == 0
     ):
-        record_completed_session(st.session_state.duration_sec)
-        current_task_id = str(st.session_state.get("current_task_id", "")).strip()
-        if current_task_id:
-            # Link one completed pomodoro to the selected task exactly once.
-            add_pomodoro_to_task(current_task_id, st.session_state.duration_sec)
-            set_task_feedback("已为当前任务累计 1 个番茄投入。")
+        try:
+            record_completed_session(st.session_state.duration_sec)
+            current_task_id = str(st.session_state.get("current_task_id", "")).strip()
+            if current_task_id:
+                # Link one completed pomodoro to the selected task exactly once.
+                add_pomodoro_to_task(current_task_id, st.session_state.duration_sec)
+                set_task_feedback("已为当前任务累计 1 个番茄投入。")
+            else:
+                set_task_feedback("本次番茄已计入今日统计。")
+        except RuntimeError as exc:
+            st.error(str(exc))
 
-    st.subheader("Pomodoro Timer")
-    st.markdown(f"## {format_mmss(st.session_state.remaining_sec)}")
-    st.caption(f"Status: {st.session_state.timer_status}")
+    status = st.session_state.timer_status
+    remaining = int(st.session_state.remaining_sec)
+    duration = int(st.session_state.duration_sec)
+    progress = _progress_rate(remaining, duration)
+    status_text = _status_label(status)
+    status_color = _status_tone(status)
+
+    st.markdown('<div class="panel-title">专注计时</div>', unsafe_allow_html=True)
+    st.markdown('<div class="panel-note">完成一个番茄，让注意力留在当下。</div>', unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div style="
+            border:1px solid #f2ddd6;
+            border-radius:14px;
+            padding:0.85rem 0.9rem 0.9rem 0.9rem;
+            background:linear-gradient(120deg,#fff5f1 0%,#fffefb 70%);
+            margin-bottom:0.55rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <div style="font-size:2.2rem;font-weight:780;line-height:1;color:#be3119;">
+              {format_mmss(remaining)}
+            </div>
+            <div style="
+              font-size:0.85rem;
+              color:{status_color};
+              border:1px solid #f0d1c8;
+              border-radius:999px;
+              padding:0.24rem 0.62rem;
+              background:#fff;">
+              {status_text}
+            </div>
+          </div>
+          <div style="margin-top:0.7rem;">
+            <div style="height:8px;background:#f4e3dd;border-radius:999px;overflow:hidden;">
+              <div style="height:8px;width:{progress * 100:.1f}%;background:#e2492f;border-radius:999px;"></div>
+            </div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     col1, col2 = st.columns(2)
 

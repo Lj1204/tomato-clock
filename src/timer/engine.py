@@ -39,12 +39,17 @@ def start(session_state: Any) -> None:
     """Start countdown from current remaining time."""
     if session_state.timer_status == "running":
         return
+    if int(session_state.remaining_sec) <= 0:
+        # Recover from stale zero state to avoid running a finished timer.
+        session_state.remaining_sec = int(session_state.duration_sec)
     session_state.timer_status = "running"
     session_state.last_tick_ts = _now()
 
 
 def pause(session_state: Any) -> None:
     """Freeze current progress and switch to paused state."""
+    if session_state.timer_status != "running":
+        return
     tick(session_state)
     session_state.timer_status = "paused"
     session_state.last_tick_ts = None
